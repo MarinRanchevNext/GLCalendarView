@@ -38,9 +38,13 @@
 @property (nonatomic, strong) NSMutableArray *ranges;
 @property (nonatomic) BOOL showMagnifier;
 @property (nonatomic, weak) id<GLCalendarViewDelegate> delegate;
+
+@property (nonatomic, readonly) UICollectionView *collectionView;
+
 - (void)reload;
 - (void)addRange:(GLCalendarDateRange *)range;
 - (void)removeRange:(GLCalendarDateRange *)range;
+- (void)removeAllRanges;
 - (void)updateRange:(GLCalendarDateRange *)range withBeginDate:(NSDate *)beginDate endDate:(NSDate *)endDate;
 - (void)forceFinishEdit;
 - (void)beginToEditRange:(GLCalendarDateRange *)range;

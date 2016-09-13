@@ -161,6 +161,11 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
     [self reloadFromBeginDate:range.beginDate toDate:range.endDate];
 }
 
+- (void)removeAllRanges{
+    [self.ranges removeAllObjects];
+    [self reloadFromBeginDate:self.firstDate toDate:self.lastDate];
+}
+
 - (void)updateRange:(GLCalendarDateRange *)range withBeginDate:(NSDate *)beginDate endDate:(NSDate *)endDate
 {
     NSDate *beginDateToReload = [[GLDateUtils minForDate:range.beginDate andDate:beginDate] copy];
