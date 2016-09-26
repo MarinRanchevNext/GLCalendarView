@@ -21,8 +21,8 @@
 {
     self = [super initWithFrame:CGRectMake(0, 0, size, size)];
     if (self) {
-        self.layer.borderColor = strokeColor.CGColor;
-        self.layer.borderWidth = borderWidth;
+        self.layer.borderColor = [UIColor colorWithRed: 0.129 green: 0.522 blue: 0.773 alpha: 1].CGColor;
+        self.layer.borderWidth = 2;
         self.layer.cornerRadius = size / 2;
         self.backgroundColor = [UIColor whiteColor];
         self.layer.masksToBounds = YES;

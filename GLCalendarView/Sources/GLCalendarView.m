@@ -13,12 +13,11 @@
 
 static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
-#define DEFAULT_PADDING 6;
-#define DEFAULT_ROW_HEIGHT 54;
+#define DEFAULT_PADDING 0;
+#define DEFAULT_ROW_HEIGHT 50;
 
 @interface GLCalendarView()<UICollectionViewDataSource, UICollectionViewDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate>
-@property (nonatomic, readwrite) NSCalendar *calendar;
-@property (nonatomic, weak) GLCalendarDateRange *rangeUnderEdit;
+@property (nonatomic, strong) NSCalendar *calendar;
 
 @property (nonatomic, strong) UILongPressGestureRecognizer *dragBeginDateGesture;
 @property (nonatomic, strong) UILongPressGestureRecognizer *dragEndDateGesture;
@@ -26,7 +25,6 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 @property (nonatomic) BOOL draggingBeginDate;
 @property (nonatomic) BOOL draggingEndDate;
 
-@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIView *weekDayTitle;
 @property (weak, nonatomic) IBOutlet GLCalendarMonthCoverView *monthCoverView;
 @property (weak, nonatomic) IBOutlet UIView *magnifierContainer;
@@ -37,6 +35,14 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
 @synthesize firstDate = _firstDate;
 @synthesize lastDate = _lastDate;
+
+- (id)init {
+    self = [super init];
+    if (self) {
+        [self load];
+    }
+    return self;
+}
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -77,7 +83,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
     self.collectionView.dataSource = self;
     self.collectionView.delegate = self;
-    [self.collectionView registerNib:[UINib nibWithNibName:@"GLCalendarDayCell" bundle:[NSBundle bundleForClass:self.class]] forCellWithReuseIdentifier:CELL_REUSE_IDENTIFIER];
+    [self.collectionView registerNib:[UINib nibWithNibName:@"GLCalendarDayCell" bundle:nil] forCellWithReuseIdentifier:CELL_REUSE_IDENTIFIER];
     
     self.dragBeginDateGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleDragBeginDate:)];
     self.dragEndDateGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleDragEndDate:)];
@@ -108,18 +114,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
     [self.weekDayTitle.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     CGFloat width = (CGRectGetWidth(self.bounds) - self.padding * 2) / 7;
     CGFloat centerY = self.weekDayTitle.bounds.size.height / 2;
-    NSArray *titles;
-    if ([self.delegate respondsToSelector:@selector(weekDayTitlesForCalendarView:)]) {
-        titles = [self.delegate weekDayTitlesForCalendarView:self];
-    } else {
-        titles = self.calendar.veryShortStandaloneWeekdaySymbols;
-    }
-    NSInteger firstWeekDayIdx = [self.calendar firstWeekday] - 1;  // Sunday == 1
-    if (firstWeekDayIdx > 0) {
-        NSArray *post = [titles subarrayWithRange:NSMakeRange(firstWeekDayIdx, 7 - firstWeekDayIdx)];
-        NSArray *pre = [titles subarrayWithRange:NSMakeRange(0, firstWeekDayIdx)];
-        titles = [post arrayByAddingObjectsFromArray:pre];
-    }
+    NSArray *titles = @[@"S", @"M", @"T", @"W", @"T", @"F", @"S"];
     for (int i = 0; i < titles.count; i++) {
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 20)];
         label.textAlignment = NSTextAlignmentCenter;
@@ -134,17 +129,19 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (void)reloadAppearance
 {
     GLCalendarView *appearance = [[self class] appearance];
-    self.padding = appearance.padding ?: DEFAULT_PADDING;
-    self.rowHeight = appearance.rowHeight ?: DEFAULT_ROW_HEIGHT;
-    self.weekDayTitleAttributes = appearance.weekDayTitleAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:8], NSForegroundColorAttributeName:[UIColor grayColor]};
-    self.monthCoverAttributes = appearance.monthCoverAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:30]};
+    self.padding = appearance.padding ? appearance.padding : DEFAULT_PADDING;
+    self.rowHeight = appearance.rowHeight ? appearance.rowHeight : DEFAULT_ROW_HEIGHT;
+    self.weekDayTitleAttributes = appearance.weekDayTitleAttributes ? appearance.weekDayTitleAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:8], NSForegroundColorAttributeName:[UIColor grayColor]};
+    self.monthCoverAttributes = appearance.monthCoverAttributes ? appearance.monthCoverAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:30]};
     self.monthCoverView.textAttributes = self.monthCoverAttributes;
+    
 }
 
 #pragma mark - public api
 
 - (void)reload
 {
+    self.rowHeight = floorf((self.bounds.size.width/7) + 5);
     [self.monthCoverView updateWithFirstDate:self.firstDate lastDate:self.lastDate calendar:self.calendar rowHeight:self.rowHeight];
     [self.collectionView reloadData];
 }
@@ -152,7 +149,6 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (void)addRange:(GLCalendarDateRange *)range
 {
     [self.ranges addObject:range];
-    [self reloadFromBeginDate:range.beginDate toDate:range.endDate];
 }
 
 - (void)removeRange:(GLCalendarDateRange *)range
@@ -161,9 +157,21 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
     [self reloadFromBeginDate:range.beginDate toDate:range.endDate];
 }
 
-- (void)removeAllRanges{
-    [self.ranges removeAllObjects];
-    [self reloadFromBeginDate:self.firstDate toDate:self.lastDate];
+- (void)removeAllRanges
+{
+    if (self.ranges.count > 0) {
+        NSDate *beginDate, *endDate;
+        for (GLCalendarDateRange *range in self.ranges) {
+            if (beginDate == nil || range.beginDate.timeIntervalSinceReferenceDate < beginDate.timeIntervalSinceReferenceDate) {
+                beginDate = range.beginDate;
+            }
+            if (endDate == nil || range.endDate.timeIntervalSinceReferenceDate > endDate.timeIntervalSinceReferenceDate) {
+                endDate = range.endDate;
+            }
+        }
+        [self.ranges removeAllObjects];
+        [self reloadFromBeginDate:beginDate toDate:endDate];
+    }
 }
 
 - (void)updateRange:(GLCalendarDateRange *)range withBeginDate:(NSDate *)beginDate endDate:(NSDate *)endDate
@@ -198,7 +206,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (NSDate *)firstDate
 {
     if (!_firstDate) {
-        self.firstDate = [GLDateUtils dateByAddingDays:-365 toDate:[NSDate date]];
+        self.firstDate = [GLDateUtils monthFirstDate:[NSDate date]];
     }
     return _firstDate;
 }
@@ -211,7 +219,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (NSDate *)lastDate
 {
     if (!_lastDate) {
-        self.lastDate = [GLDateUtils dateByAddingDays:30 toDate:[NSDate date]];
+        self.lastDate = [GLDateUtils dateByAddingMonths:48 toDate:self.firstDate];
     }
     return _lastDate;
 }
@@ -292,12 +300,13 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
     } else {
         if (self.rangeUnderEdit) {
             [self finishEditRange:self.rangeUnderEdit continueEditing:NO];
-        } else {
-            BOOL canAdd = [self.delegate calenderView:self canAddRangeWithBeginDate:date];
-            if (canAdd) {
-                GLCalendarDateRange *rangeToAdd = [self.delegate calenderView:self rangeToAddWithBeginDate:date];
-                [self addRange:rangeToAdd];
-            }
+        }
+        
+        BOOL canAdd = [self.delegate calenderView:self canAddRangeWithBeginDate:date];
+        if (canAdd) {
+            GLCalendarDateRange *rangeToAdd = [self.delegate calenderView:self rangeToAddWithBeginDate:date];
+            [self addRange:rangeToAdd];
+            [self beginToEditRange:rangeToAdd];
         }
     }
 }
@@ -327,6 +336,11 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (CGFloat)cellWidth
 {
     return (CGRectGetWidth(self.bounds) - self.padding * 2) / 7;
+}
+
+- (void)dealloc {
+    _collectionView.delegate = nil;
+    _collectionView.dataSource = nil;
 }
 
 # pragma mark - UIScrollView delegate
@@ -496,7 +510,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
 - (void)showMagnifierAboveDate:(NSDate *)date
 {
-    if (!self.showMagnifier) {
+    if (!self.showMaginfier) {
         return;
     }
     GLCalendarDayCell *cell = (GLCalendarDayCell *)[self collectionView:self.collectionView cellForItemAtIndexPath:[self indexPathForDate:date]];
@@ -522,7 +536,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
 - (void)hideMagnifier
 {
-    if (!self.showMagnifier) {
+    if (!self.showMaginfier) {
         return;
     }
     self.magnifierContainer.hidden = YES;
