@@ -18,6 +18,8 @@
 - (void)calenderView:(GLCalendarView *)calendarView finishEditRange:(GLCalendarDateRange *)range continueEditing:(BOOL)continueEditing;
 - (BOOL)calenderView:(GLCalendarView *)calendarView canUpdateRange:(GLCalendarDateRange *)range toBeginDate:(NSDate *)beginDate endDate:(NSDate *)endDate;
 - (void)calenderView:(GLCalendarView *)calendarView didUpdateRange:(GLCalendarDateRange *)range toBeginDate:(NSDate *)beginDate endDate:(NSDate *)endDate;
+@optional
+- (NSArray *)weekDayTitlesForCalendarView:(GLCalendarView *)calendarView;
 @end
 
 
@@ -30,12 +32,13 @@
 @property (nonatomic, strong) UIColor *backToTodayButtonColor UI_APPEARANCE_SELECTOR;
 @property (nonatomic, strong) UIColor *backToTodayButtonBorderColor UI_APPEARANCE_SELECTOR;
 
+@property (nonatomic, readonly) NSCalendar *calendar;
 @property (nonatomic, weak) GLCalendarDateRange *rangeUnderEdit;
-@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+@property (nonatomic, readonly) IBOutlet UICollectionView *collectionView;
 @property (nonatomic, copy) NSDate *firstDate;
 @property (nonatomic, copy) NSDate *lastDate;
 @property (nonatomic, strong) NSMutableArray *ranges;
-@property (nonatomic) BOOL showMaginfier;
+@property (nonatomic) BOOL showMagnifier;
 @property (nonatomic, weak) id<GLCalendarViewDelegate> delegate;
 - (void)reload;
 - (void)addRange:(GLCalendarDateRange *)range;

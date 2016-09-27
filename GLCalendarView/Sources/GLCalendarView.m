@@ -17,7 +17,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 #define DEFAULT_ROW_HEIGHT 50;
 
 @interface GLCalendarView()<UICollectionViewDataSource, UICollectionViewDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate>
-@property (nonatomic, strong) NSCalendar *calendar;
+@property (nonatomic, readwrite) NSCalendar *calendar;
 
 @property (nonatomic, strong) UILongPressGestureRecognizer *dragBeginDateGesture;
 @property (nonatomic, strong) UILongPressGestureRecognizer *dragEndDateGesture;
@@ -25,6 +25,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 @property (nonatomic) BOOL draggingBeginDate;
 @property (nonatomic) BOOL draggingEndDate;
 
+@property (nonatomic, readwrite) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIView *weekDayTitle;
 @property (weak, nonatomic) IBOutlet GLCalendarMonthCoverView *monthCoverView;
 @property (weak, nonatomic) IBOutlet UIView *magnifierContainer;
@@ -83,7 +84,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
     self.collectionView.dataSource = self;
     self.collectionView.delegate = self;
-    [self.collectionView registerNib:[UINib nibWithNibName:@"GLCalendarDayCell" bundle:nil] forCellWithReuseIdentifier:CELL_REUSE_IDENTIFIER];
+    [self.collectionView registerNib:[UINib nibWithNibName:@"GLCalendarDayCell" bundle:[NSBundle bundleForClass:self.class]] forCellWithReuseIdentifier:CELL_REUSE_IDENTIFIER];
     
     self.dragBeginDateGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleDragBeginDate:)];
     self.dragEndDateGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleDragEndDate:)];
@@ -129,12 +130,11 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (void)reloadAppearance
 {
     GLCalendarView *appearance = [[self class] appearance];
-    self.padding = appearance.padding ? appearance.padding : DEFAULT_PADDING;
-    self.rowHeight = appearance.rowHeight ? appearance.rowHeight : DEFAULT_ROW_HEIGHT;
-    self.weekDayTitleAttributes = appearance.weekDayTitleAttributes ? appearance.weekDayTitleAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:8], NSForegroundColorAttributeName:[UIColor grayColor]};
-    self.monthCoverAttributes = appearance.monthCoverAttributes ? appearance.monthCoverAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:30]};
+    self.padding = appearance.padding ?: DEFAULT_PADDING;
+    self.rowHeight = appearance.rowHeight ?: DEFAULT_ROW_HEIGHT;
+    self.weekDayTitleAttributes = appearance.weekDayTitleAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:8], NSForegroundColorAttributeName:[UIColor grayColor]};
+    self.monthCoverAttributes = appearance.monthCoverAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:30]};
     self.monthCoverView.textAttributes = self.monthCoverAttributes;
-    
 }
 
 #pragma mark - public api
@@ -206,7 +206,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (NSDate *)firstDate
 {
     if (!_firstDate) {
-        self.firstDate = [GLDateUtils monthFirstDate:[NSDate date]];
+        self.firstDate = [GLDateUtils dateByAddingDays:-365 toDate:[NSDate date]];
     }
     return _firstDate;
 }
@@ -219,7 +219,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 - (NSDate *)lastDate
 {
     if (!_lastDate) {
-        self.lastDate = [GLDateUtils dateByAddingMonths:48 toDate:self.firstDate];
+        self.lastDate = [GLDateUtils dateByAddingDays:30 toDate:[NSDate date]];
     }
     return _lastDate;
 }
@@ -510,7 +510,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
 - (void)showMagnifierAboveDate:(NSDate *)date
 {
-    if (!self.showMaginfier) {
+    if (!self.showMagnifier) {
         return;
     }
     GLCalendarDayCell *cell = (GLCalendarDayCell *)[self collectionView:self.collectionView cellForItemAtIndexPath:[self indexPathForDate:date]];
@@ -536,7 +536,7 @@ static NSString * const CELL_REUSE_IDENTIFIER = @"DayCell";
 
 - (void)hideMagnifier
 {
-    if (!self.showMaginfier) {
+    if (!self.showMagnifier) {
         return;
     }
     self.magnifierContainer.hidden = YES;

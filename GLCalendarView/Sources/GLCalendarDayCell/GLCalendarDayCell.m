@@ -42,24 +42,24 @@ static NSString *kAppFontName = @"HelveticaNeue-Light";
 - (void)reloadAppearance
 {
     GLCalendarDayCell *appearance = [[self class] appearance];
-    self.evenMonthBackgroundColor = appearance.evenMonthBackgroundColor ? appearance.evenMonthBackgroundColor : UIColorFromRGB(0xf8f8f8);
-    self.oddMonthBackgroundColor = appearance.oddMonthBackgroundColor ? appearance.oddMonthBackgroundColor : [UIColor whiteColor];
-    self.dayLabelAttributes = appearance.dayLabelAttributes ? appearance.dayLabelAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:20]};
-    self.futureDayLabelAttributes = appearance.futureDayLabelAttributes ? appearance.futureDayLabelAttributes : self.dayLabelAttributes;
-    self.monthLabelAttributes = appearance.monthLabelAttributes ? appearance.monthLabelAttributes : @{NSFontAttributeName:[UIFont systemFontOfSize:8]};
-    self.todayLabelAttributes = appearance.todayLabelAttributes ? appearance.todayLabelAttributes : @{NSFontAttributeName:[UIFont boldSystemFontOfSize:22]};
+    self.evenMonthBackgroundColor = appearance.evenMonthBackgroundColor ?: UIColorFromRGB(0xf8f8f8);
+    self.oddMonthBackgroundColor = appearance.oddMonthBackgroundColor ?: [UIColor whiteColor];
+    self.dayLabelAttributes = appearance.dayLabelAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:20]};
+    self.futureDayLabelAttributes = appearance.futureDayLabelAttributes ?: self.dayLabelAttributes;
+    self.monthLabelAttributes = appearance.monthLabelAttributes ?: @{NSFontAttributeName:[UIFont systemFontOfSize:8]};
+    self.todayLabelAttributes = appearance.todayLabelAttributes ?: @{NSFontAttributeName:[UIFont boldSystemFontOfSize:22]};
     
-    self.backgroundCover.paddingTop = appearance.editCoverPadding ? appearance.editCoverPadding : 2;
-    self.backgroundCover.borderWidth = appearance.editCoverBorderWidth ? appearance.editCoverBorderWidth : 2;
-    self.backgroundCover.strokeColor = appearance.editCoverBorderColor ? appearance.editCoverBorderColor : [UIColor darkGrayColor];
+    self.backgroundCover.paddingTop = appearance.editCoverPadding ?: 2;
+    self.backgroundCover.borderWidth = appearance.editCoverBorderWidth ?: 2;
+    self.backgroundCover.strokeColor = appearance.editCoverBorderColor ?: [UIColor darkGrayColor];
     
-    self.backgroundCover.pointSize = appearance.editCoverPointSize ? appearance.editCoverPointSize : 14;
-    self.backgroundCover.pointScale = appearance.editCoverPointScale ? appearance.editCoverPointScale : 1.3;
+    self.backgroundCover.pointSize = appearance.editCoverPointSize ?: 14;
+    self.backgroundCover.pointScale = appearance.editCoverPointScale ?: 1.3;
     
-    RANGE_DISPLAY_MODE mode = appearance.rangeDisplayMode ? appearance.rangeDisplayMode : RANGE_DISPLAY_MODE_SINGLE;
+    RANGE_DISPLAY_MODE mode = appearance.rangeDisplayMode ?: RANGE_DISPLAY_MODE_SINGLE;
     self.backgroundCover.continuousRangeDisplay = mode == RANGE_DISPLAY_MODE_CONTINUOUS ? YES : NO;
     
-    self.todayBackgroundColor = appearance.todayBackgroundColor ? appearance.todayBackgroundColor : self.backgroundCover.strokeColor;
+    self.todayBackgroundColor = appearance.todayBackgroundColor ?: self.backgroundCover.strokeColor;
     self.containerPadding = [GLCalendarView appearance].padding;
 }
 
@@ -108,9 +108,9 @@ static NSString *kAppFontName = @"HelveticaNeue-Light";
         self.backgroundCover.isToday = YES;
         self.backgroundCover.fillColor = self.todayBackgroundColor;
     } else if (day == 1) {
-        self.monthLabel.textColor = [UIColor colorWithRed: 0.129 green: 0.522 blue: 0.773 alpha: 1];
+        self.monthLabel.textColor = [UIColor redColor];
         [self setMonthLabelText:[self monthText:month]];
-        self.dayLabel.textColor = [UIColor colorWithRed: 0.129 green: 0.522 blue: 0.773 alpha: 1];
+        self.dayLabel.textColor = [UIColor redColor];
         [self setDayLabelText:[NSString stringWithFormat:@"%ld", (long)day]];
         self.backgroundCover.isToday = NO;
     } else {
@@ -128,9 +128,9 @@ static NSString *kAppFontName = @"HelveticaNeue-Light";
     // background cover
     if (self.range) {
         // configure look when in range
-        self.backgroundCover.fillColor = self.range.backgroundColor ? self.range.backgroundColor : [UIColor clearColor];
-        self.backgroundCover.backgroundImage = self.range.backgroundImage ? self.range.backgroundImage : nil;
-        UIColor *textColor = self.range.textColor ? self.range.textColor : [UIColor whiteColor];
+        self.backgroundCover.fillColor = self.range.backgroundColor ?: [UIColor clearColor];
+        self.backgroundCover.backgroundImage = self.range.backgroundImage ?: nil;
+        UIColor *textColor = self.range.textColor ?: [UIColor whiteColor];
         self.monthLabel.textColor = textColor;
         self.dayLabel.textColor = textColor;
         
@@ -185,23 +185,23 @@ static NSString *kAppFontName = @"HelveticaNeue-Light";
 
 - (void)setDayLabelText:(NSString *)text
 {
-    self.dayLabel.text = text;
+    self.dayLabel.attributedText = [[NSAttributedString alloc] initWithString:text attributes:self.dayLabelAttributes];
 }
 
 - (void)setFutureDayLabelText:(NSString *)text
 {
-    self.dayLabel.text = text;
+    self.dayLabel.attributedText = [[NSAttributedString alloc] initWithString:text attributes:self.futureDayLabelAttributes];
 }
 
 
 - (void)setTodayLabelText:(NSString *)text
 {
-    self.dayLabel.text = text;
+    self.dayLabel.attributedText = [[NSAttributedString alloc] initWithString:text attributes:self.todayLabelAttributes];
 }
 
 - (void)setMonthLabelText:(NSString *)text
 {
-    self.monthLabel.text = text;
+    self.monthLabel.attributedText = [[NSAttributedString alloc] initWithString:text attributes:self.monthLabelAttributes];
 }
 
 
